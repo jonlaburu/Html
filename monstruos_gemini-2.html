@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Monstruos de Bolsillo</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800;900&family=Cinzel:wght@700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d0d1a;--panel:#1a1a2e;--accent:#f7c948;--accent2:#ff6b8a;--accent3:#5ee7ff;--text:#f0eeff;--muted:#7a7a9a}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Nunito',sans-serif;min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(1px 1px at 15% 25%,rgba(255,255,255,.5) 0%,transparent 100%),radial-gradient(1px 1px at 55% 65%,rgba(255,255,255,.3) 0%,transparent 100%),radial-gradient(1px 1px at 85% 15%,rgba(255,255,255,.4) 0%,transparent 100%),radial-gradient(1px 1px at 35% 85%,rgba(255,255,255,.3) 0%,transparent 100%),radial-gradient(1px 1px at 75% 45%,rgba(255,255,255,.4) 0%,transparent 100%);pointer-events:none;z-index:0}
+header{position:sticky;top:0;z-index:100;background:linear-gradient(135deg,#12122a,#1a1a3a);border-bottom:2px solid rgba(247,201,72,.3);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;backdrop-filter:blur(10px)}
+.logo{font-family:'Fredoka One',cursive;font-size:1.4rem;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.coins{display:flex;align-items:center;gap:6px;background:rgba(247,201,72,.15);border:1px solid rgba(247,201,72,.4);border-radius:20px;padding:4px 12px;font-weight:800;font-size:.95rem;color:var(--accent)}
+nav{position:fixed;bottom:0;left:0;right:0;z-index:100;background:linear-gradient(0deg,#0d0d1a 70%,transparent);padding:8px 0 12px;display:flex;justify-content:space-around}
+.nav-btn{display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:none;color:var(--muted);font-family:'Nunito',sans-serif;font-size:.65rem;font-weight:700;cursor:pointer;padding:6px 20px;border-radius:12px;transition:all .2s}
+.nav-btn.active{color:var(--accent)}
+.nav-btn .icon{font-size:1.4rem}
+.nav-btn.active .icon{filter:drop-shadow(0 0 6px var(--accent))}
+.screen{display:none;padding:16px 12px 90px;position:relative;z-index:1}
+.screen.active{display:block}
+.pack-title{font-family:'Fredoka One',cursive;font-size:1.4rem;text-align:center;margin-bottom:4px;color:var(--accent)}
+.pack-subtitle{text-align:center;color:var(--muted);font-size:.85rem;margin-bottom:20px}
+.pack-single{display:flex;justify-content:center;margin-bottom:20px}
+.pack-card{background:var(--panel);border-radius:18px;padding:20px 28px;display:flex;flex-direction:column;align-items:center;gap:8px;border:2px solid rgba(255,107,53,.5);box-shadow:0 0 20px rgba(255,107,53,.2)}
+.pack-emoji{font-size:3.5rem;line-height:1}
+.pack-name{font-family:'Fredoka One',cursive;font-size:1.1rem;text-align:center}
+.pack-cost{font-size:.8rem;font-weight:800;color:var(--accent);background:rgba(247,201,72,.15);border-radius:10px;padding:2px 10px}
+.pack-desc{font-size:.75rem;color:var(--muted);text-align:center}
+.pack-cards-count{font-size:.75rem;color:var(--accent3);font-weight:700}
+.btn-open{width:100%;padding:14px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:16px;font-family:'Fredoka One',cursive;font-size:1.2rem;color:#1a1a2e;cursor:pointer;transition:transform .15s;box-shadow:0 4px 20px rgba(247,201,72,.3)}
+.btn-open:active{transform:scale(.97)}
+.btn-open:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.96);flex-direction:column;align-items:center;justify-content:center;gap:20px}
+.overlay.active{display:flex}
+.opening-pack{font-size:7rem;animation:packShake .5s ease-in-out infinite}
+@keyframes packShake{0%,100%{transform:rotate(-6deg) scale(1)}50%{transform:rotate(6deg) scale(1.12)}}
+.opening-text{font-family:'Fredoka One',cursive;font-size:1.3rem;color:var(--accent);animation:pulse 1s ease-in-out infinite;text-align:center;padding:0 20px}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.opening-sub{color:var(--muted);font-size:.85rem;text-align:center;padding:0 30px;line-height:1.5}
+.progress-dots{display:flex;gap:10px;margin-top:8px}
+.dot{width:12px;height:12px;border-radius:50%;background:rgba(255,255,255,.15);transition:all .3s}
+.dot.done{background:var(--accent);box-shadow:0 0 8px var(--accent)}
+.dot.loading{background:var(--accent2);animation:pulse 0.6s ease-in-out infinite}
+.reveal-screen{display:none;position:fixed;inset:0;z-index:200;background:#06060f;overflow-y:auto;padding:16px 16px 100px}
+.reveal-screen.active{display:block}
+.reveal-title{font-family:'Fredoka One',cursive;font-size:1.5rem;color:var(--accent);margin-bottom:20px;text-align:center}
+.reveal-cards-list{display:flex;flex-direction:column;align-items:center;gap:24px}
+.btn-collect{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);width:calc(100% - 32px);max-width:380px;padding:14px;background:linear-gradient(135deg,#4cda6e,#2ab34a);border:none;border-radius:16px;font-family:'Fredoka One',cursive;font-size:1.1rem;color:#0d1a0d;cursor:pointer;box-shadow:0 4px 20px rgba(76,218,110,.4);z-index:10}
+.tcg-card{width:260px;border-radius:16px;overflow:hidden;position:relative;flex-shrink:0;animation:cardReveal .5s cubic-bezier(.34,1.56,.64,1) both}
+@keyframes cardReveal{from{opacity:0;transform:translateY(40px) rotateY(-15deg)}to{opacity:1;transform:translateY(0) rotateY(0)}}
+.tcg-card.common{background:linear-gradient(160deg,#2e2e44,#1c1c30);border:3px solid #6a6a8a;box-shadow:0 6px 20px rgba(0,0,0,.5)}
+.tcg-card.rare{background:linear-gradient(160deg,#1a2a50,#0d1a3a);border:3px solid #3ab4f2;box-shadow:0 8px 30px rgba(58,180,242,.4)}
+.tcg-card.epic{background:linear-gradient(160deg,#2a1040,#1a0828);border:3px solid #c97aff;box-shadow:0 8px 30px rgba(201,122,255,.5)}
+.tcg-card.legendary{background:#000;border:3px solid #f7c948;box-shadow:0 10px 40px rgba(247,201,72,.6)}
+.tcg-card.rare::after,.tcg-card.epic::after,.tcg-card.legendary::after{content:'';position:absolute;inset:0;border-radius:13px;pointer-events:none;background:linear-gradient(135deg,transparent 30%,rgba(255,255,255,.07) 50%,transparent 70%);animation:shimmer 3s ease-in-out infinite}
+@keyframes shimmer{0%,100%{opacity:0;transform:translateX(-30%)}50%{opacity:1;transform:translateX(30%)}}
+.card-art-box{position:relative;margin:0 8px;border-radius:10px;overflow:hidden;height:160px;background:#111;display:flex;align-items:center;justify-content:center}
+.tcg-card.epic .card-art-box,.tcg-card.legendary .card-art-box{position:absolute;inset:0;margin:0;border-radius:0;height:100%;z-index:0}
+.card-art-box img{width:100%;height:100%;object-fit:cover;display:block}
+.art-loading{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:rgba(255,255,255,.4);font-size:.7rem;width:100%;height:100%}
+.art-spinner{width:28px;height:28px;border:3px solid rgba(255,255,255,.1);border-top-color:rgba(255,255,255,.6);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.art-error{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:rgba(255,100,100,.6);font-size:.65rem;width:100%;height:100%;text-align:center;padding:8px}
+.card-inner-wrap{position:relative;z-index:1;width:100%}
+.tcg-card.epic .card-inner-wrap::before,.tcg-card.legendary .card-inner-wrap::before{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0) 0%,rgba(0,0,0,.1) 45%,rgba(0,0,0,.85) 100%);pointer-events:none;z-index:0;border-radius:13px}
+.card-header{display:flex;align-items:center;justify-content:space-between;padding:8px 10px 4px}
+.card-name{font-family:'Fredoka One',cursive;font-size:1rem;line-height:1;flex:1}
+.tcg-card.legendary .card-name{font-family:'Cinzel',serif;font-size:.88rem;color:#f7c948;text-shadow:0 0 8px rgba(247,201,72,.7)}
+.card-hp{font-family:'Fredoka One',cursive;font-size:.85rem;white-space:nowrap}
+.card-type-row{padding:3px 10px;display:flex;align-items:center;gap:6px}
+.type-pill{font-size:.62rem;font-weight:800;padding:2px 8px;border-radius:8px;text-transform:uppercase;letter-spacing:.5px}
+.rarity-pip{margin-left:auto;font-size:.65rem;font-weight:900;letter-spacing:1px}
+.card-stats{display:flex;gap:4px;padding:0 8px 4px}
+.stat-box{flex:1;background:rgba(0,0,0,.35);border-radius:8px;padding:4px 2px;text-align:center}
+.stat-val{font-family:'Fredoka One',cursive;font-size:.95rem;line-height:1}
+.stat-lbl{font-size:.52rem;color:rgba(255,255,255,.5);text-transform:uppercase;font-weight:700}
+.card-attack{margin:0 8px 8px;background:rgba(0,0,0,.4);border-radius:10px;padding:7px 10px;border-left:3px solid transparent}
+.atk-name{font-weight:900;font-size:.8rem;margin-bottom:2px}
+.atk-desc{font-size:.68rem;color:rgba(255,255,255,.6);line-height:1.3}
+.t-fire{background:rgba(255,107,53,.25);color:#ff8c5a}
+.b-fire{border-color:#ff6b35}
+.pip-common{color:#888}.pip-rare{color:#3ab4f2}.pip-epic{color:#c97aff}.pip-legendary{color:#f7c948}
+.new-badge{position:absolute;top:-6px;right:-6px;background:var(--accent2);color:#fff;font-size:.6rem;font-weight:900;padding:3px 8px;border-radius:10px;z-index:10}
+.section-title{font-family:'Fredoka One',cursive;font-size:1.2rem;color:var(--accent);margin-bottom:8px}
+.collection-stats{display:flex;gap:10px;margin-bottom:16px}
+.stat-chip{background:var(--panel);border-radius:12px;padding:8px 14px;display:flex;flex-direction:column;align-items:center;flex:1}
+.stat-num{font-family:'Fredoka One',cursive;font-size:1.3rem;color:var(--accent3)}
+.stat-label{font-size:.65rem;color:var(--muted);font-weight:700;text-transform:uppercase}
+.collection-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.mini-tcg{width:100%;border-radius:12px;overflow:hidden;cursor:pointer;border:2px solid transparent;transition:transform .2s;position:relative}
+.mini-tcg:active{transform:scale(.97)}
+.mini-tcg.common{background:linear-gradient(160deg,#2e2e44,#1c1c30);border-color:#5a5a7a}
+.mini-tcg.rare{background:linear-gradient(160deg,#1a2a50,#0d1a3a);border-color:#3ab4f2;box-shadow:0 4px 12px rgba(58,180,242,.3)}
+.mini-tcg.epic{background:linear-gradient(160deg,#2a1040,#1a0828);border-color:#c97aff}
+.mini-tcg.legendary{background:#000;border-color:#f7c948;box-shadow:0 4px 18px rgba(247,201,72,.45)}
+.mini-art{height:90px;overflow:hidden;background:#111;display:flex;align-items:center;justify-content:center}
+.mini-art img{width:100%;height:100%;object-fit:cover}
+.mini-art-placeholder{font-size:2.5rem;opacity:.6}
+.mini-footer{padding:6px 8px}
+.mini-mname{font-family:'Fredoka One',cursive;font-size:.82rem;line-height:1.1}
+.mini-type-row{display:flex;align-items:center;justify-content:space-between;margin-top:2px}
+.mini-count-badge{position:absolute;top:5px;right:5px;background:var(--accent2);color:#fff;font-size:.58rem;font-weight:900;padding:2px 6px;border-radius:7px;z-index:2}
+.empty-col{grid-column:1/-1;text-align:center;padding:40px 20px;color:var(--muted)}
+.empty-col .icon{font-size:3rem;margin-bottom:12px}
+.card-modal{display:none;position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.9);align-items:center;justify-content:center;padding:20px}
+.card-modal.active{display:flex;flex-direction:column;gap:16px}
+.modal-close{background:rgba(255,255,255,.1);border:none;color:var(--text);width:36px;height:36px;border-radius:50%;font-size:1.1rem;cursor:pointer;flex-shrink:0}
+.modal-card-wrap{display:flex;flex-direction:column;align-items:center;gap:8px;overflow-y:auto;max-height:85vh}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">👾 Monstruos de Bolsillo</div>
+  <div class="coins">🪙 <span id="coinCount">150</span></div>
+</header>
+
+<div class="overlay" id="packOpening">
+  <div class="opening-pack">🔥</div>
+  <div class="opening-text" id="openingText">Abriendo sobre...</div>
+  <div class="opening-sub" id="openingSub">Gemini está ilustrando tus cartas ✨</div>
+  <div class="progress-dots" id="progressDots">
+    <div class="dot" id="dot0"></div>
+    <div class="dot" id="dot1"></div>
+  </div>
+</div>
+
+<div class="reveal-screen" id="cardsReveal">
+  <div class="reveal-title">🎉 ¡Nuevas cartas!</div>
+  <div class="reveal-cards-list" id="revealedCards"></div>
+  <button class="btn-collect" onclick="collectCards()">¡Añadir a mi colección! ✅</button>
+</div>
+
+<div class="card-modal" id="cardModal">
+  <button class="modal-close" onclick="closeModal()">✕</button>
+  <div class="modal-card-wrap" id="modalCardWrap"></div>
+</div>
+
+<div class="screen active" id="screen-packs">
+  <div class="pack-title">Sobre de Monstruos 🔥</div>
+  <div class="pack-subtitle">¡Abrí un sobre y Gemini ilustra tus cartas!</div>
+  <div class="pack-single">
+    <div class="pack-card">
+      <div class="pack-emoji">🔥</div>
+      <div class="pack-name">Sobre Infernal</div>
+      <div class="pack-cost">🪙 30</div>
+      <div class="pack-cards-count">2 cartas · Arte IA real</div>
+      <div class="pack-desc">Ilustraciones generadas por Gemini</div>
+    </div>
+  </div>
+  <button class="btn-open" id="btnOpen" onclick="openPack()">¡Abrir Sobre!</button>
+  <div style="text-align:center;color:var(--muted);font-size:.8rem;margin-top:10px" id="statusMsg"></div>
+</div>
+
+<div class="screen" id="screen-collection">
+  <div class="section-title">Mi Colección</div>
+  <div class="collection-stats">
+    <div class="stat-chip"><div class="stat-num" id="totalOwned">0</div><div class="stat-label">Cartas</div></div>
+    <div class="stat-chip"><div class="stat-num" id="uniqueOwned">0</div><div class="stat-label">Únicas</div></div>
+  </div>
+  <div class="collection-grid" id="collectionGrid">
+    <div class="empty-col"><div class="icon">📦</div><div>¡Todavía no tenés cartas!</div></div>
+  </div>
+</div>
+
+<nav>
+  <button class="nav-btn active" onclick="showScreen('packs',this)"><span class="icon">📦</span>Sobres</button>
+  <button class="nav-btn" onclick="showScreen('collection',this)"><span class="icon">🃏</span>Colección</button>
+</nav>
+
+<script>
+const GEMINI_KEY = 'AIzaSyAIQZBj3H9gSBCXoj5BINS7Yzlbn9rF6Bs';
+
+const CARDS = [
+  {id:1,name:"Carbuncito",type:"fire",rarity:"common",hp:40,atk:30,def:20,attack:"Mordida Ardiente",atkPow:30,atkDesc:"Muerde con llamas en la boca. Quema al rival.",
+   artPrompt:"Pokemon TCG card art: a small cute baby crocodile monster with ember-orange scales and tiny flame horns, glowing red eyes, sitting proudly on volcanic rocky ground with lava cracks, dark cave atmosphere, dramatic ember particles. Vibrant digital painting style, no text."},
+  {id:2,name:"Volcaniño",type:"fire",rarity:"common",hp:35,atk:35,def:15,attack:"Escupir Lava",atkPow:35,atkDesc:"Escupe lava fundida. Puede quemar al rival.",
+   artPrompt:"Pokemon TCG card art: a small feisty lizard monster with dark red scales and fiery tail, mouth open showing glowing orange throat breathing lava, erupting volcano behind it, rivers of lava, smoky orange sky. Vibrant digital painting style, no text."},
+  {id:3,name:"Brasita",type:"fire",rarity:"common",hp:45,atk:25,def:25,attack:"Zarpazo Ígneo",atkPow:25,atkDesc:"Rasguña con garras al rojo vivo.",
+   artPrompt:"Pokemon TCG card art: a fluffy kitten monster with flame-tipped fur, glowing ember paws with fiery claws extended, playful expression, warm fireplace glow background, ember sparks swirling, cozy fiery cave. Vibrant digital painting style, no text."},
+  {id:4,name:"Pyrowolf",type:"fire",rarity:"rare",hp:70,atk:55,def:35,attack:"Aullido Llameante",atkPow:55,atkDesc:"Aúlla soltando una ola de fuego que afecta a todos los rivales.",
+   artPrompt:"Pokemon TCG card art: a fierce wolf monster with blazing fur mane, howling with mouth wide open releasing a massive wave of fire, burning forest at night, silhouette against full red moon, embers everywhere. Dramatic lighting, powerful stance, vibrant digital painting, no text."},
+];
+
+const RARITY_ORDER={legendary:0,epic:1,rare:2,common:3};
+const RARITY_PIP={common:'●',rare:'◆◆',epic:'★★★',legendary:'✦✦✦✦'};
+const PACK_COST=30;
+const SAVE_KEY='monstruos_gemini_v1';
+
+let coins=150, collection={}, pendingCards=[], artCache={};
+
+function saveGame(){
+  try{
+    // Guardamos artCache con las imágenes en base64 para no regenerar
+    localStorage.setItem(SAVE_KEY, JSON.stringify({coins, collection, artCache}));
+  }catch(e){ console.warn('No se pudo guardar (localStorage lleno?)'); }
+}
+function loadGame(){
+  try{
+    const d = JSON.parse(localStorage.getItem(SAVE_KEY));
+    if(d){ coins=d.coins??150; collection=d.collection??{}; artCache=d.artCache??{}; }
+  }catch(e){}
+}
+loadGame();
+document.addEventListener('DOMContentLoaded',()=>{ document.getElementById('coinCount').textContent=coins; });
+
+// ===== GENERACION DE IMAGENES con Pollinations.ai (gratis, sin API key) =====
+async function generateArt(card){
+  if(artCache[card.id]) return artCache[card.id];
+
+  try {
+    const prompt = encodeURIComponent(card.artPrompt);
+    const width = 280;
+    const height = (card.rarity==='epic'||card.rarity==='legendary') ? 380 : 160;
+    const seed = card.id * 137;
+    const url = `https://image.pollinations.ai/prompt/${prompt}?width=${width}&height=${height}&seed=${seed}&nologo=true&model=flux`;
+
+    const res = await fetch(url);
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const blob = await res.blob();
+    const dataUrl = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+
+    artCache[card.id] = dataUrl;
+    saveGame();
+    return dataUrl;
+
+  } catch(e){
+    console.error('Error generando arte:', e);
+    return null;
+  }
+}
+
+// ===== RENDER CARTA =====
+function renderCard(card, isNew=false, delayIdx=0){
+  const isFullArt = card.rarity==='epic'||card.rarity==='legendary';
+  const hpColor = card.rarity==='legendary'?'#f7c948':card.rarity==='epic'?'#c97aff':card.rarity==='rare'?'#3ab4f2':'#aaa';
+
+  let artContent;
+  if(artCache[card.id]){
+    artContent = `<img src="${artCache[card.id]}" alt="${card.name}">`;
+  } else {
+    artContent = `<div class="art-loading"><div class="art-spinner"></div><div>Generando con IA...</div></div>`;
+  }
+
+  const artBox = `<div class="card-art-box" id="artbox-${card.id}">${artContent}</div>`;
+  const header = `<div class="card-header">
+    <div class="card-name">${card.name}</div>
+    <div class="card-hp" style="color:${hpColor}"><span style="font-size:1.1rem">${card.hp}</span> HP</div>
+  </div>`;
+  const typeRow = `<div class="card-type-row">
+    <span class="type-pill t-fire">🔥 Fuego</span>
+    <span class="rarity-pip pip-${card.rarity}">${RARITY_PIP[card.rarity]}</span>
+  </div>`;
+  const stats = `<div class="card-stats">
+    <div class="stat-box"><div class="stat-val">${card.atk}</div><div class="stat-lbl">ATK</div></div>
+    <div class="stat-box"><div class="stat-val">${card.def}</div><div class="stat-lbl">DEF</div></div>
+    <div class="stat-box"><div class="stat-val">${card.hp}</div><div class="stat-lbl">HP</div></div>
+  </div>`;
+  const attack = `<div class="card-attack b-fire">
+    <div class="atk-name"><span style="float:right;font-family:'Fredoka One',cursive;font-size:.95rem;color:${hpColor}">${card.atkPow}</span>⚔️ ${card.attack}</div>
+    <div class="atk-desc">${card.atkDesc}</div>
+  </div>`;
+
+  const inner = isFullArt
+    ? `${artBox}<div class="card-inner-wrap">${header}${typeRow}${stats}${attack}</div>`
+    : `<div class="card-inner-wrap">${header}${artBox}${typeRow}${stats}${attack}</div>`;
+
+  const newBadge = isNew ? '<div class="new-badge">¡NUEVA!</div>' : '';
+  const delay = delayIdx * 0.2;
+  return `<div class="tcg-card ${card.rarity}" style="animation-delay:${delay}s;position:relative;" data-card-id="${card.id}">${newBadge}${inner}</div>`;
+}
+
+function updateArtInDOM(card, dataUrl){
+  document.querySelectorAll(`#artbox-${card.id}`).forEach(box => {
+    box.innerHTML = `<img src="${dataUrl}" alt="${card.name}">`;
+  });
+}
+
+// ===== PACK LOGIC =====
+function drawCard(){
+  const r = Math.random();
+  let rarity = r<0.02?'legendary':r<0.12?'epic':r<0.35?'rare':'common';
+  let pool = CARDS.filter(c=>c.rarity===rarity);
+  if(!pool.length) pool = CARDS.filter(c=>c.rarity==='common');
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+
+function wait(ms){ return new Promise(r=>setTimeout(r,ms)); }
+
+async function openPack(){
+  if(coins < PACK_COST){
+    document.getElementById('statusMsg').textContent='⚠️ No tenés suficientes monedas';
+    return;
+  }
+  coins -= PACK_COST;
+  document.getElementById('coinCount').textContent = coins;
+  document.getElementById('btnOpen').disabled = true;
+  saveGame();
+
+  // Elegir 2 cartas
+  pendingCards = [];
+  const c1 = drawCard();
+  pendingCards.push(c1);
+  let c2 = drawCard(), tries=0;
+  while(c2.id===c1.id && tries<8){ c2=drawCard(); tries++; }
+  pendingCards.push(c2);
+  pendingCards.sort((a,b)=>RARITY_ORDER[a.rarity]-RARITY_ORDER[b.rarity]);
+
+  const overlay = document.getElementById('packOpening');
+  overlay.classList.add('active');
+
+  // === CARTA 1 ===
+  document.getElementById('dot0').className = 'dot loading';
+  document.getElementById('dot1').className = 'dot';
+
+  const cached1 = !!artCache[pendingCards[0].id];
+  document.getElementById('openingText').textContent = `Carta 1: ${pendingCards[0].name}`;
+  document.getElementById('openingSub').textContent = cached1
+    ? '¡Ya tengo esta ilustración guardada! ⚡'
+    : 'Gemini está creando la ilustración... 🎨';
+
+  if(!cached1){
+    const art1 = await generateArt(pendingCards[0]);
+    if(!art1){
+      document.getElementById('openingSub').textContent = 'No se pudo generar (límite alcanzado o error)';
+      await wait(1200);
+    }
+  }
+
+  document.getElementById('dot0').className = 'dot done';
+  document.getElementById('openingText').textContent = `✅ ${pendingCards[0].name} lista!`;
+  await wait(600);
+
+  // === CARTA 2 ===
+  document.getElementById('dot1').className = 'dot loading';
+
+  const cached2 = !!artCache[pendingCards[1].id];
+  document.getElementById('openingText').textContent = `Carta 2: ${pendingCards[1].name}`;
+  document.getElementById('openingSub').textContent = cached2
+    ? '¡Ya tengo esta ilustración guardada! ⚡'
+    : 'Gemini está creando la ilustración... 🎨';
+
+  if(!cached2){
+    const art2 = await generateArt(pendingCards[1]);
+    if(!art2){
+      document.getElementById('openingSub').textContent = 'No se pudo generar (límite alcanzado o error)';
+      await wait(1200);
+    }
+  }
+
+  document.getElementById('dot1').className = 'dot done';
+  document.getElementById('openingText').textContent = '🎉 ¡Ambas listas!';
+  document.getElementById('openingSub').textContent = 'Revelando cartas...';
+  await wait(700);
+
+  overlay.classList.remove('active');
+  showReveal();
+}
+
+function showReveal(){
+  const container = document.getElementById('revealedCards');
+  container.innerHTML = '';
+
+  const isNew0 = !collection[pendingCards[0].id];
+  container.innerHTML = renderCard(pendingCards[0], isNew0, 0);
+
+  setTimeout(()=>{
+    const isNew1 = !collection[pendingCards[1].id];
+    container.innerHTML += renderCard(pendingCards[1], isNew1, 1);
+  }, 400);
+
+  document.getElementById('cardsReveal').classList.add('active');
+}
+
+function collectCards(){
+  pendingCards.forEach(c=>{ collection[c.id]=(collection[c.id]||0)+1; });
+  document.getElementById('cardsReveal').classList.remove('active');
+  pendingCards=[];
+  coins+=10;
+  document.getElementById('coinCount').textContent=coins;
+  document.getElementById('btnOpen').disabled=false;
+  saveGame();
+  renderCollection();
+}
+
+// ===== COLECCIÓN =====
+function showScreen(name,btn){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('screen-'+name).classList.add('active');
+  btn.classList.add('active');
+  if(name==='collection') renderCollection();
+}
+
+function renderCollection(){
+  const grid = document.getElementById('collectionGrid');
+  const owned = Object.keys(collection)
+    .map(id=>({card:CARDS.find(c=>c.id==id),count:collection[id]}))
+    .filter(x=>x.card)
+    .sort((a,b)=>RARITY_ORDER[a.card.rarity]-RARITY_ORDER[b.card.rarity]);
+
+  document.getElementById('totalOwned').textContent = owned.reduce((s,x)=>s+x.count,0);
+  document.getElementById('uniqueOwned').textContent = owned.length;
+
+  if(!owned.length){
+    grid.innerHTML=`<div class="empty-col"><div class="icon">📦</div><div>¡Todavía no tenés cartas!</div></div>`;
+    return;
+  }
+
+  grid.innerHTML = owned.map(({card,count})=>{
+    const art = artCache[card.id]
+      ? `<img src="${artCache[card.id]}" alt="${card.name}" style="width:100%;height:100%;object-fit:cover;">`
+      : `<div class="mini-art-placeholder">🔥</div>`;
+    return `<div class="mini-tcg ${card.rarity}" onclick="showCard(${card.id})">
+      ${count>1?`<div class="mini-count-badge">x${count}</div>`:''}
+      <div class="mini-art">${art}</div>
+      <div class="mini-footer">
+        <div class="mini-mname">${card.name}</div>
+        <div class="mini-type-row">
+          <span class="type-pill t-fire" style="font-size:.55rem;padding:1px 6px">🔥 Fuego</span>
+          <span class="pip-${card.rarity}" style="font-size:.65rem">${RARITY_PIP[card.rarity]}</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function showCard(id){
+  const card = CARDS.find(c=>c.id===id);
+  if(!card) return;
+  const wrap = document.getElementById('modalCardWrap');
+  wrap.innerHTML = renderCard(card,false,0);
+  wrap.innerHTML += `<div style="text-align:center;color:var(--muted);font-size:.8rem;margin-top:8px">Copias en tu colección: ${collection[id]||0}</div>`;
+  document.getElementById('cardModal').classList.add('active');
+}
+
+function closeModal(){ document.getElementById('cardModal').classList.remove('active'); }
+</script>
+</body>
+</html>
