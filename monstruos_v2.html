@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Monstruos de Bolsillo</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800;900&family=Cinzel:wght@700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#09090f;--panel:#13131f;--panel2:#1c1c2e;
+  --accent:#f7c948;--accent2:#ff6b8a;--accent3:#5ee7ff;--accent4:#7fff6e;
+  --text:#f0eeff;--muted:#6a6a8a;
+  --fire:#ff7c3a;--water:#3ab4f2;--plant:#4fd47a;--electric:#f7e348;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Nunito',sans-serif;min-height:100vh;overflow-x:hidden}
+
+/* Starfield */
+body::before{content:'';position:fixed;inset:0;
+  background-image:
+    radial-gradient(1px 1px at 10% 20%,rgba(255,255,255,.55) 0%,transparent 100%),
+    radial-gradient(1px 1px at 30% 70%,rgba(255,255,255,.3) 0%,transparent 100%),
+    radial-gradient(1px 1px at 55% 35%,rgba(255,255,255,.4) 0%,transparent 100%),
+    radial-gradient(1px 1px at 75% 80%,rgba(255,255,255,.35) 0%,transparent 100%),
+    radial-gradient(1px 1px at 88% 12%,rgba(255,255,255,.5) 0%,transparent 100%),
+    radial-gradient(1px 1px at 42% 55%,rgba(255,255,255,.25) 0%,transparent 100%),
+    radial-gradient(1px 1px at 65% 90%,rgba(255,255,255,.3) 0%,transparent 100%),
+    radial-gradient(1px 1px at 20% 88%,rgba(255,255,255,.2) 0%,transparent 100%);
+  pointer-events:none;z-index:0}
+
+header{position:sticky;top:0;z-index:100;
+  background:linear-gradient(135deg,#0e0e20,#161628);
+  border-bottom:2px solid rgba(247,201,72,.25);
+  padding:10px 16px;display:flex;align-items:center;justify-content:space-between;
+  backdrop-filter:blur(12px)}
+.logo{font-family:'Fredoka One',cursive;font-size:1.35rem;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.coins{display:flex;align-items:center;gap:6px;
+  background:rgba(247,201,72,.12);border:1px solid rgba(247,201,72,.35);
+  border-radius:20px;padding:4px 12px;font-weight:800;font-size:.92rem;color:var(--accent)}
+
+nav{position:fixed;bottom:0;left:0;right:0;z-index:100;
+  background:linear-gradient(0deg,#09090f 75%,transparent);
+  padding:8px 0 14px;display:flex;justify-content:space-around}
+.nav-btn{display:flex;flex-direction:column;align-items:center;gap:2px;
+  background:none;border:none;color:var(--muted);
+  font-family:'Nunito',sans-serif;font-size:.62rem;font-weight:700;
+  cursor:pointer;padding:6px 18px;border-radius:12px;transition:all .2s}
+.nav-btn.active{color:var(--accent)}
+.nav-btn .icon{font-size:1.35rem}
+.nav-btn.active .icon{filter:drop-shadow(0 0 6px var(--accent))}
+
+.screen{display:none;padding:16px 12px 90px;position:relative;z-index:1}
+.screen.active{display:block}
+
+/* ===== PACKS SCREEN ===== */
+.packs-title{font-family:'Fredoka One',cursive;font-size:1.3rem;
+  text-align:center;margin-bottom:4px;color:var(--accent)}
+.packs-sub{text-align:center;color:var(--muted);font-size:.8rem;margin-bottom:18px}
+.packs-grid{display:flex;flex-direction:column;gap:14px}
+.pack-card{border-radius:18px;padding:16px 18px;
+  display:flex;align-items:center;gap:14px;position:relative;overflow:hidden;cursor:pointer;
+  border:2px solid transparent;transition:transform .15s;active:scale(.97)}
+.pack-card:active{transform:scale(.97)}
+.pack-card.fire{background:linear-gradient(135deg,#2a1200,#1a0a00);border-color:rgba(255,124,58,.55);box-shadow:0 6px 24px rgba(255,100,30,.2)}
+.pack-card.water{background:linear-gradient(135deg,#001a2e,#00101e);border-color:rgba(58,180,242,.55);box-shadow:0 6px 24px rgba(30,140,220,.2)}
+.pack-card.plant{background:linear-gradient(135deg,#001a08,#000f05);border-color:rgba(79,212,122,.55);box-shadow:0 6px 24px rgba(50,180,80,.2)}
+.pack-card.electric{background:linear-gradient(135deg,#1a1800,#0f0e00);border-color:rgba(247,227,72,.55);box-shadow:0 6px 24px rgba(220,200,30,.2)}
+.pack-emoji-big{font-size:3rem;line-height:1;flex-shrink:0}
+.pack-info{flex:1}
+.pack-name{font-family:'Fredoka One',cursive;font-size:1.05rem}
+.pack-cost-row{display:flex;align-items:center;gap:8px;margin-top:4px}
+.pack-cost{font-size:.78rem;font-weight:800;color:var(--accent);
+  background:rgba(247,201,72,.15);border-radius:8px;padding:2px 8px}
+.pack-cards-count{font-size:.72rem;color:var(--accent3);font-weight:700}
+.pack-desc{font-size:.7rem;color:var(--muted);margin-top:3px}
+.pack-btn{padding:8px 16px;background:linear-gradient(135deg,var(--accent),var(--accent2));
+  border:none;border-radius:12px;font-family:'Fredoka One',cursive;
+  font-size:.95rem;color:#1a1a2e;cursor:pointer;flex-shrink:0;
+  transition:transform .15s;box-shadow:0 3px 12px rgba(247,201,72,.3)}
+.pack-btn:active{transform:scale(.95)}
+.pack-btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+
+/* type accent strip */
+.pack-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:18px 0 0 18px}
+.pack-card.fire::before{background:var(--fire)}
+.pack-card.water::before{background:var(--water)}
+.pack-card.plant::before{background:var(--plant)}
+.pack-card.electric::before{background:var(--electric)}
+
+.status-msg{text-align:center;color:var(--muted);font-size:.8rem;margin-top:10px}
+
+/* ===== OVERLAY (opening) ===== */
+.overlay{display:none;position:fixed;inset:0;z-index:200;
+  background:rgba(0,0,0,.96);flex-direction:column;
+  align-items:center;justify-content:center;gap:18px}
+.overlay.active{display:flex}
+.opening-pack{font-size:6rem;animation:packShake .5s ease-in-out infinite}
+@keyframes packShake{0%,100%{transform:rotate(-6deg) scale(1)}50%{transform:rotate(6deg) scale(1.12)}}
+.opening-text{font-family:'Fredoka One',cursive;font-size:1.2rem;color:var(--accent);
+  animation:pulse 1s ease-in-out infinite;text-align:center;padding:0 20px}
+.opening-sub{color:var(--muted);font-size:.82rem;text-align:center;padding:0 30px;line-height:1.5}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.progress-dots{display:flex;gap:10px;margin-top:6px}
+.dot{width:12px;height:12px;border-radius:50%;background:rgba(255,255,255,.12);transition:all .3s}
+.dot.done{background:var(--accent);box-shadow:0 0 8px var(--accent)}
+.dot.loading{background:var(--accent2);animation:pulse .6s ease-in-out infinite}
+
+/* ===== REVEAL ===== */
+.reveal-screen{display:none;position:fixed;inset:0;z-index:200;
+  background:#06060f;overflow-y:auto;padding:16px 16px 100px}
+.reveal-screen.active{display:block}
+.reveal-title{font-family:'Fredoka One',cursive;font-size:1.45rem;
+  color:var(--accent);margin-bottom:20px;text-align:center}
+.reveal-cards-list{display:flex;flex-direction:column;align-items:center;gap:24px}
+.btn-collect{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);
+  width:calc(100% - 32px);max-width:400px;padding:14px;
+  background:linear-gradient(135deg,#4cda6e,#2ab34a);
+  border:none;border-radius:16px;font-family:'Fredoka One',cursive;
+  font-size:1.1rem;color:#0d1a0d;cursor:pointer;
+  box-shadow:0 4px 20px rgba(76,218,110,.4);z-index:10}
+
+/* ===== TCG CARD ===== */
+.tcg-card{width:260px;border-radius:16px;overflow:hidden;position:relative;
+  flex-shrink:0;animation:cardReveal .5s cubic-bezier(.34,1.56,.64,1) both}
+@keyframes cardReveal{from{opacity:0;transform:translateY(40px) rotateY(-15deg)}to{opacity:1;transform:translateY(0) rotateY(0)}}
+
+.tcg-card.common{background:linear-gradient(160deg,#2e2e44,#1c1c30);border:3px solid #6a6a8a;box-shadow:0 6px 20px rgba(0,0,0,.5)}
+.tcg-card.rare{background:linear-gradient(160deg,#1a2a50,#0d1a3a);border:3px solid #3ab4f2;box-shadow:0 8px 30px rgba(58,180,242,.4)}
+.tcg-card.epic{background:linear-gradient(160deg,#2a1040,#1a0828);border:3px solid #c97aff;box-shadow:0 8px 30px rgba(201,122,255,.5)}
+.tcg-card.legendary{background:#000;border:3px solid #f7c948;box-shadow:0 10px 40px rgba(247,201,72,.6)}
+
+.tcg-card.rare::after,.tcg-card.epic::after,.tcg-card.legendary::after{
+  content:'';position:absolute;inset:0;border-radius:13px;pointer-events:none;
+  background:linear-gradient(135deg,transparent 30%,rgba(255,255,255,.07) 50%,transparent 70%);
+  animation:shimmer 3s ease-in-out infinite}
+@keyframes shimmer{0%,100%{opacity:0;transform:translateX(-30%)}50%{opacity:1;transform:translateX(30%)}}
+
+.card-art-box{position:relative;margin:0 8px;border-radius:10px;overflow:hidden;
+  height:160px;background:#111;display:flex;align-items:center;justify-content:center}
+.tcg-card.epic .card-art-box,.tcg-card.legendary .card-art-box{
+  position:absolute;inset:0;margin:0;border-radius:0;height:100%;z-index:0}
+.card-art-box img{width:100%;height:100%;object-fit:cover;display:block}
+.art-loading{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:8px;color:rgba(255,255,255,.4);font-size:.7rem;width:100%;height:100%}
+.art-spinner{width:28px;height:28px;border:3px solid rgba(255,255,255,.1);
+  border-top-color:rgba(255,255,255,.6);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.art-error{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:6px;color:rgba(255,100,100,.6);font-size:.65rem;width:100%;height:100%;
+  text-align:center;padding:8px}
+
+.card-inner-wrap{position:relative;z-index:1;width:100%}
+.tcg-card.epic .card-inner-wrap::before,.tcg-card.legendary .card-inner-wrap::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(to bottom,rgba(0,0,0,0) 0%,rgba(0,0,0,.1) 45%,rgba(0,0,0,.88) 100%);
+  pointer-events:none;z-index:0;border-radius:13px}
+.card-header{display:flex;align-items:center;justify-content:space-between;padding:8px 10px 4px}
+.card-name{font-family:'Fredoka One',cursive;font-size:.98rem;line-height:1;flex:1}
+.tcg-card.legendary .card-name{font-family:'Cinzel',serif;font-size:.85rem;color:#f7c948;text-shadow:0 0 8px rgba(247,201,72,.7)}
+.card-hp{font-family:'Fredoka One',cursive;font-size:.85rem;white-space:nowrap}
+.card-type-row{padding:3px 10px;display:flex;align-items:center;gap:6px}
+.type-pill{font-size:.6rem;font-weight:800;padding:2px 8px;border-radius:8px;text-transform:uppercase;letter-spacing:.5px}
+.rarity-pip{margin-left:auto;font-size:.62rem;font-weight:900;letter-spacing:1px}
+.card-stats{display:flex;gap:4px;padding:0 8px 4px}
+.stat-box{flex:1;background:rgba(0,0,0,.35);border-radius:8px;padding:4px 2px;text-align:center}
+.stat-val{font-family:'Fredoka One',cursive;font-size:.95rem;line-height:1}
+.stat-lbl{font-size:.52rem;color:rgba(255,255,255,.5);text-transform:uppercase;font-weight:700}
+.card-attack{margin:0 8px 8px;background:rgba(0,0,0,.4);border-radius:10px;padding:7px 10px;border-left:3px solid transparent}
+.atk-name{font-weight:900;font-size:.78rem;margin-bottom:2px}
+.atk-desc{font-size:.67rem;color:rgba(255,255,255,.6);line-height:1.3}
+
+/* type colors */
+.t-fire{background:rgba(255,124,58,.25);color:#ff9060}.b-fire{border-color:#ff7c3a}
+.t-water{background:rgba(58,180,242,.25);color:#5ec8ff}.b-water{border-color:#3ab4f2}
+.t-plant{background:rgba(79,212,122,.25);color:#6ef09a}.b-plant{border-color:#4fd47a}
+.t-electric{background:rgba(247,227,72,.25);color:#ffe84a}.b-electric{border-color:#f7e348}
+
+.pip-common{color:#888}.pip-rare{color:#3ab4f2}.pip-epic{color:#c97aff}.pip-legendary{color:#f7c948}
+
+.new-badge{position:absolute;top:-6px;right:-6px;
+  background:var(--accent2);color:#fff;font-size:.58rem;font-weight:900;
+  padding:3px 8px;border-radius:10px;z-index:10}
+
+/* ===== COLECCIÓN ===== */
+.section-title{font-family:'Fredoka One',cursive;font-size:1.2rem;color:var(--accent);margin-bottom:10px}
+.collection-stats{display:flex;gap:10px;margin-bottom:16px}
+.stat-chip{background:var(--panel);border-radius:12px;padding:8px 14px;display:flex;flex-direction:column;align-items:center;flex:1}
+.stat-num{font-family:'Fredoka One',cursive;font-size:1.3rem;color:var(--accent3)}
+.stat-label{font-size:.62rem;color:var(--muted);font-weight:700;text-transform:uppercase}
+
+/* filter tabs */
+.filter-tabs{display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;padding-bottom:4px}
+.filter-tabs::-webkit-scrollbar{display:none}
+.ftab{background:var(--panel);border:1px solid rgba(255,255,255,.08);color:var(--muted);
+  border-radius:20px;padding:4px 12px;font-size:.7rem;font-weight:800;
+  cursor:pointer;white-space:nowrap;transition:all .2s;flex-shrink:0}
+.ftab.active{color:#1a1a2e;font-weight:900}
+.ftab.all.active{background:var(--accent);border-color:var(--accent)}
+.ftab.fire.active{background:var(--fire);border-color:var(--fire)}
+.ftab.water.active{background:var(--water);border-color:var(--water)}
+.ftab.plant.active{background:var(--plant);border-color:var(--plant)}
+.ftab.electric.active{background:var(--electric);border-color:var(--electric)}
+
+.collection-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.mini-tcg{width:100%;border-radius:12px;overflow:hidden;cursor:pointer;border:2px solid transparent;transition:transform .2s;position:relative}
+.mini-tcg:active{transform:scale(.97)}
+.mini-tcg.common{background:linear-gradient(160deg,#2e2e44,#1c1c30);border-color:#5a5a7a}
+.mini-tcg.rare{background:linear-gradient(160deg,#1a2a50,#0d1a3a);border-color:#3ab4f2;box-shadow:0 4px 12px rgba(58,180,242,.3)}
+.mini-tcg.epic{background:linear-gradient(160deg,#2a1040,#1a0828);border-color:#c97aff}
+.mini-tcg.legendary{background:#000;border-color:#f7c948;box-shadow:0 4px 18px rgba(247,201,72,.45)}
+.mini-art{height:88px;overflow:hidden;background:#111;display:flex;align-items:center;justify-content:center}
+.mini-art img{width:100%;height:100%;object-fit:cover}
+.mini-art-placeholder{font-size:2.2rem;opacity:.55}
+.mini-footer{padding:5px 8px}
+.mini-mname{font-family:'Fredoka One',cursive;font-size:.8rem;line-height:1.1}
+.mini-type-row{display:flex;align-items:center;justify-content:space-between;margin-top:2px}
+.mini-count-badge{position:absolute;top:5px;right:5px;
+  background:var(--accent2);color:#fff;font-size:.56rem;font-weight:900;
+  padding:2px 5px;border-radius:7px;z-index:2}
+.empty-col{grid-column:1/-1;text-align:center;padding:40px 20px;color:var(--muted)}
+.empty-col .icon{font-size:3rem;margin-bottom:12px}
+
+/* ===== MODAL ===== */
+.card-modal{display:none;position:fixed;inset:0;z-index:300;
+  background:rgba(0,0,0,.92);align-items:center;justify-content:center;padding:20px}
+.card-modal.active{display:flex;flex-direction:column;gap:14px}
+.modal-close{background:rgba(255,255,255,.1);border:none;color:var(--text);
+  width:36px;height:36px;border-radius:50%;font-size:1.1rem;cursor:pointer;flex-shrink:0}
+.modal-card-wrap{display:flex;flex-direction:column;align-items:center;gap:8px;
+  overflow-y:auto;max-height:85vh}
+
+/* ===== GENERADOR IA ===== */
+.ai-title{font-family:'Fredoka One',cursive;font-size:1.3rem;color:var(--accent);margin-bottom:4px}
+.ai-sub{color:var(--muted);font-size:.8rem;margin-bottom:18px}
+.ai-form{display:flex;flex-direction:column;gap:12px}
+.ai-label{font-size:.78rem;font-weight:800;color:var(--accent3);margin-bottom:4px;display:block}
+.ai-input{width:100%;background:var(--panel);border:1px solid rgba(255,255,255,.12);
+  color:var(--text);border-radius:12px;padding:10px 14px;font-family:'Nunito',sans-serif;
+  font-size:.88rem;resize:none;outline:none;transition:border-color .2s}
+.ai-input:focus{border-color:rgba(247,201,72,.5)}
+.ai-type-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.ai-type-btn{padding:8px 4px;border-radius:10px;border:2px solid rgba(255,255,255,.1);
+  background:var(--panel);color:var(--muted);font-size:.7rem;font-weight:800;
+  cursor:pointer;transition:all .2s;text-align:center}
+.ai-type-btn.sel-fire{border-color:var(--fire);color:var(--fire);background:rgba(255,124,58,.15)}
+.ai-type-btn.sel-water{border-color:var(--water);color:var(--water);background:rgba(58,180,242,.15)}
+.ai-type-btn.sel-plant{border-color:var(--plant);color:var(--plant);background:rgba(79,212,122,.15)}
+.ai-type-btn.sel-electric{border-color:var(--electric);color:var(--electric);background:rgba(247,227,72,.15)}
+.ai-rarity-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.ai-rarity-btn{padding:8px 4px;border-radius:10px;border:2px solid rgba(255,255,255,.1);
+  background:var(--panel);color:var(--muted);font-size:.68rem;font-weight:800;
+  cursor:pointer;transition:all .2s;text-align:center}
+.ai-rarity-btn.sel{border-color:currentColor}
+.ai-rarity-btn.sel.r-common{color:#aaa;background:rgba(150,150,150,.1)}
+.ai-rarity-btn.sel.r-rare{color:#3ab4f2;background:rgba(58,180,242,.1)}
+.ai-rarity-btn.sel.r-epic{color:#c97aff;background:rgba(201,122,255,.1)}
+.ai-rarity-btn.sel.r-legendary{color:#f7c948;background:rgba(247,201,72,.1)}
+.btn-generate{width:100%;padding:14px;
+  background:linear-gradient(135deg,#7c3aff,#c97aff);
+  border:none;border-radius:16px;font-family:'Fredoka One',cursive;
+  font-size:1.15rem;color:#fff;cursor:pointer;
+  box-shadow:0 4px 20px rgba(124,58,255,.35);transition:transform .15s}
+.btn-generate:active{transform:scale(.97)}
+.btn-generate:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.ai-result-area{margin-top:18px;display:flex;flex-direction:column;align-items:center;gap:14px}
+.ai-status{text-align:center;color:var(--muted);font-size:.82rem;padding:10px;line-height:1.6}
+.ai-status.working{color:var(--accent3)}
+.btn-add-to-col{width:100%;max-width:280px;padding:12px;
+  background:linear-gradient(135deg,#4cda6e,#2ab34a);
+  border:none;border-radius:14px;font-family:'Fredoka One',cursive;
+  font-size:1rem;color:#0d1a0d;cursor:pointer}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">👾 Monstruos de Bolsillo</div>
+  <div class="coins">🪙 <span id="coinCount">150</span></div>
+</header>
+
+<!-- OVERLAY opening -->
+<div class="overlay" id="packOpening">
+  <div class="opening-pack" id="openingEmoji">🔥</div>
+  <div class="opening-text" id="openingText">Abriendo sobre...</div>
+  <div class="opening-sub" id="openingSub">Generando tus cartas con IA ✨</div>
+  <div class="progress-dots" id="progressDots"></div>
+</div>
+
+<!-- REVEAL -->
+<div class="reveal-screen" id="cardsReveal">
+  <div class="reveal-title">🎉 ¡Nuevas cartas!</div>
+  <div class="reveal-cards-list" id="revealedCards"></div>
+  <button class="btn-collect" onclick="collectCards()">¡Añadir a mi colección! ✅</button>
+</div>
+
+<!-- MODAL -->
+<div class="card-modal" id="cardModal">
+  <button class="modal-close" onclick="closeModal()">✕</button>
+  <div class="modal-card-wrap" id="modalCardWrap"></div>
+</div>
+
+<!-- ===== SCREEN: PACKS ===== -->
+<div class="screen active" id="screen-packs">
+  <div class="packs-title">Elegí tu Sobre 🃏</div>
+  <div class="packs-sub">Cada sobre contiene 3 cartas con arte generado por IA</div>
+  <div class="packs-grid" id="packsGrid"></div>
+  <div class="status-msg" id="statusMsg"></div>
+</div>
+
+<!-- ===== SCREEN: COLLECTION ===== -->
+<div class="screen" id="screen-collection">
+  <div class="section-title">Mi Colección</div>
+  <div class="collection-stats">
+    <div class="stat-chip"><div class="stat-num" id="totalOwned">0</div><div class="stat-label">Cartas</div></div>
+    <div class="stat-chip"><div class="stat-num" id="uniqueOwned">0</div><div class="stat-label">Únicas</div></div>
+    <div class="stat-chip"><div class="stat-num" id="progressPct">0%</div><div class="stat-label">Progreso</div></div>
+  </div>
+  <div class="filter-tabs">
+    <button class="ftab all active" onclick="setFilter('all',this)">Todas</button>
+    <button class="ftab fire" onclick="setFilter('fire',this)">🔥 Fuego</button>
+    <button class="ftab water" onclick="setFilter('water',this)">💧 Agua</button>
+    <button class="ftab plant" onclick="setFilter('plant',this)">🌿 Planta</button>
+    <button class="ftab electric" onclick="setFilter('electric',this)">⚡ Eléctrico</button>
+  </div>
+  <div class="collection-grid" id="collectionGrid">
+    <div class="empty-col"><div class="icon">📦</div><div>¡Todavía no tenés cartas!</div></div>
+  </div>
+</div>
+
+<!-- ===== SCREEN: GENERADOR IA ===== -->
+<div class="screen" id="screen-ai">
+  <div class="ai-title">🤖 Creador con IA</div>
+  <div class="ai-sub">Describí tu monstruo y Claude lo inventa completamente</div>
+  <div class="ai-form">
+    <div>
+      <label class="ai-label">Descripción del monstruo</label>
+      <textarea class="ai-input" id="aiDesc" rows="3" placeholder="Ej: un dragón de hielo con alas de cristal que vive en montañas nevadas..."></textarea>
+    </div>
+    <div>
+      <label class="ai-label">Tipo</label>
+      <div class="ai-type-grid">
+        <button class="ai-type-btn sel-fire" data-type="fire" onclick="selectType(this)">🔥 Fuego</button>
+        <button class="ai-type-btn" data-type="water" onclick="selectType(this)">💧 Agua</button>
+        <button class="ai-type-btn" data-type="plant" onclick="selectType(this)">🌿 Planta</button>
+        <button class="ai-type-btn" data-type="electric" onclick="selectType(this)">⚡ Eléctrico</button>
+      </div>
+    </div>
+    <div>
+      <label class="ai-label">Rareza</label>
+      <div class="ai-rarity-grid">
+        <button class="ai-rarity-btn sel r-common" data-rarity="common" onclick="selectRarity(this)">● Común</button>
+        <button class="ai-rarity-btn" data-rarity="rare" onclick="selectRarity(this)">◆ Rara</button>
+        <button class="ai-rarity-btn" data-rarity="epic" onclick="selectRarity(this)">★ Épica</button>
+        <button class="ai-rarity-btn" data-rarity="legendary" onclick="selectRarity(this)">✦ Legend.</button>
+      </div>
+    </div>
+    <button class="btn-generate" id="btnGenerate" onclick="generateAICard()">✨ Crear Monstruo</button>
+  </div>
+  <div class="ai-result-area" id="aiResultArea"></div>
+</div>
+
+<nav>
+  <button class="nav-btn active" onclick="showScreen('packs',this)"><span class="icon">📦</span>Sobres</button>
+  <button class="nav-btn" onclick="showScreen('collection',this)"><span class="icon">🃏</span>Colección</button>
+  <button class="nav-btn" onclick="showScreen('ai',this)"><span class="icon">🤖</span>Crear</button>
+</nav>
+
+<script>
+// ==================== DATOS ====================
+
+const TYPE_EMOJI = {fire:'🔥',water:'💧',plant:'🌿',electric:'⚡'};
+const TYPE_CLASS = {fire:'t-fire',water:'t-water',plant:'t-plant',electric:'t-electric'};
+const TYPE_BORDER = {fire:'b-fire',water:'b-water',plant:'b-plant',electric:'b-electric'};
+const RARITY_ORDER = {legendary:0,epic:1,rare:2,common:3};
+const RARITY_PIP = {common:'●',rare:'◆◆',epic:'★★★',legendary:'✦✦✦✦'};
+const SAVE_KEY = 'monstruos_v2_save';
+
+// 50 cartas: 15 Fuego, 13 Agua, 12 Planta, 10 Eléctrico
+const CARDS = [
+  // ===== FUEGO =====
+  {id:1,name:"Carbuncito",type:"fire",rarity:"common",hp:40,atk:30,def:20,attack:"Mordida Ardiente",atkPow:30,atkDesc:"Muerde con llamas. Puede dejar quemadura.",
+   artPrompt:"Pokemon TCG card art: cute baby crocodile with ember-orange scales and tiny flame horns, glowing red eyes, volcanic rocky ground, dark cave, ember particles. Vibrant digital painting, no text."},
+  {id:2,name:"Volcaniño",type:"fire",rarity:"common",hp:35,atk:35,def:15,attack:"Escupir Lava",atkPow:35,atkDesc:"Escupe lava fundida al rival.",
+   artPrompt:"Pokemon TCG card art: small feisty lizard with dark red scales and fiery tail, mouth open showing glowing orange throat, erupting volcano behind, rivers of lava, smoky sky. Vibrant digital painting, no text."},
+  {id:3,name:"Brasita",type:"fire",rarity:"common",hp:45,atk:25,def:25,attack:"Zarpazo Ígneo",atkPow:25,atkDesc:"Rasguña con garras al rojo vivo.",
+   artPrompt:"Pokemon TCG card art: fluffy kitten monster with flame-tipped fur, glowing ember paws, fiery claws extended, cozy fireplace glow, ember sparks swirling. Vibrant digital painting, no text."},
+  {id:4,name:"Ignipupo",type:"fire",rarity:"common",hp:38,atk:28,def:22,attack:"Bola de Fuego",atkPow:28,atkDesc:"Lanza una pequeña bola de fuego.",
+   artPrompt:"Pokemon TCG card art: round chubby puppy with bright orange fur, flame spots on back, wagging fiery tail, sitting in hot ashes, cheerful expression. Cute digital painting style, no text."},
+  {id:5,name:"Pyriling",type:"fire",rarity:"common",hp:42,atk:32,def:18,attack:"Chispazo",atkPow:32,atkDesc:"Emite chispas ardientes que queman.",
+   artPrompt:"Pokemon TCG card art: tiny fox kit with six ember-tipped tails, bright amber eyes, surrounded by floating fire sparks, warm volcanic cave background. Soft digital painting, no text."},
+  {id:6,name:"Pyrowolf",type:"fire",rarity:"rare",hp:70,atk:55,def:35,attack:"Aullido Llameante",atkPow:55,atkDesc:"Aúlla soltando una ola de fuego que afecta a todos.",
+   artPrompt:"Pokemon TCG card art: fierce wolf with blazing fur mane, howling releasing massive fire wave, burning forest at night, silhouette against full red moon. Dramatic lighting, vibrant digital painting, no text."},
+  {id:7,name:"Magmabat",type:"fire",rarity:"rare",hp:65,atk:58,def:28,attack:"Mordisco Volcánico",atkPow:58,atkDesc:"Se lanza en picada y muerde con colmillos de magma.",
+   artPrompt:"Pokemon TCG card art: large bat monster with wings made of hardened lava, molten orange eyes, diving from a volcanic sky, glowing magma dripping from fangs. Dark dramatic digital painting, no text."},
+  {id:8,name:"Cinderback",type:"fire",rarity:"rare",hp:72,atk:50,def:40,attack:"Coraza de Cenizas",atkPow:50,atkDesc:"Se cubre de cenizas y golpea al rival con masa incandescente.",
+   artPrompt:"Pokemon TCG card art: armored bear monster covered in glowing ash and ember plates, standing tall, forest fire background, heroic pose. Epic digital painting, no text."},
+  {id:9,name:"Emberlynx",type:"fire",rarity:"rare",hp:68,atk:60,def:30,attack:"Garras Solares",atkPow:60,atkDesc:"Lanza rayos de calor solar desde sus garras.",
+   artPrompt:"Pokemon TCG card art: sleek lynx with solar flare fur, golden ember claws, leaping toward a blazing sun, scorched savanna below. Vibrant action pose, digital painting, no text."},
+  {id:10,name:"Infernotl",type:"fire",rarity:"epic",hp:100,atk:80,def:50,attack:"Tormenta de Cinders",atkPow:80,atkDesc:"Invoca una tormenta de lluvia de brasas sobre todos los rivales.",
+   artPrompt:"Pokemon TCG card art: majestic axolotl monster wreathed in inferno flames, glowing magma patterns on skin, erupting caldera background, full art dramatic scene. Ultra vibrant digital painting, no text."},
+  {id:11,name:"Pyraquila",type:"fire",rarity:"epic",hp:110,atk:85,def:45,attack:"Vuelo del Cometa",atkPow:85,atkDesc:"Se lanza como un cometa de fuego destruyendo todo a su paso.",
+   artPrompt:"Pokemon TCG card art: giant eagle monster with burning wings of pure fire, diving like a comet through stormy sky, trail of flames and smoke, full art composition. Epic digital painting, no text."},
+  {id:12,name:"Solarchon",type:"fire",rarity:"epic",hp:105,atk:78,def:55,attack:"Corona Solar",atkPow:78,atkDesc:"Rodea al rival con una corona de fuego solar imposible de esquivar.",
+   artPrompt:"Pokemon TCG card art: dragon-like monster with sun-shaped crest and solar panels wings, floating above a desert, radiating intense heat waves, full art card composition. Vibrant digital painting, no text."},
+  {id:13,name:"Emberlord",type:"fire",rarity:"legendary",hp:150,atk:110,def:70,attack:"Juicio Final Ígneo",atkPow:110,atkDesc:"Desata el fuego primordial. Reduce la defensa del rival a cero.",
+   artPrompt:"Pokemon TCG card art: colossal fire dragon deity floating above an active volcano island, wings spanning the sky, eyes glowing like twin suns, entire ocean boiling below, full art legendary composition. God-tier digital painting, no text."},
+  {id:14,name:"Ignarok",type:"fire",rarity:"legendary",hp:160,atk:105,def:80,attack:"Cataclismo Magmático",atkPow:105,atkDesc:"Hunde el campo de batalla en magma. Daño masivo a todos.",
+   artPrompt:"Pokemon TCG card art: ancient titan golem made of pure magma and obsidian, towering above crumbling mountains, lava rivers cascade from its body, apocalyptic volcanic sky, full art legendary card. Epic digital painting, no text."},
+  {id:15,name:"Ashenfang",type:"fire",rarity:"rare",hp:75,atk:52,def:38,attack:"Mordida de Ceniza",atkPow:52,atkDesc:"Deja ceniza envenenada en la mordida.",
+   artPrompt:"Pokemon TCG card art: serpent snake monster with scales made of black ash and glowing ember underbelly, coiled around a scorched dead tree, dramatic red sky. Detailed digital painting, no text."},
+
+  // ===== AGUA =====
+  {id:16,name:"Burbujo",type:"water",rarity:"common",hp:38,atk:28,def:24,attack:"Salpicadura",atkPow:28,atkDesc:"Salpica agua a presión al rival.",
+   artPrompt:"Pokemon TCG card art: tiny round frog monster covered in water bubbles, big innocent eyes, sitting on a lily pad in a calm blue pond, water droplets everywhere. Cute digital painting, no text."},
+  {id:17,name:"Goterito",type:"water",rarity:"common",hp:35,atk:25,def:28,attack:"Chorro de Agua",atkPow:25,atkDesc:"Dispara un chorro concentrado de agua fría.",
+   artPrompt:"Pokemon TCG card art: small water droplet creature with tiny fins, transparent jelly body, swimming in a crystal-clear stream, underwater light rays. Cute digital painting, no text."},
+  {id:18,name:"Coralín",type:"water",rarity:"common",hp:44,atk:22,def:32,attack:"Escudo Coralino",atkPow:22,atkDesc:"Se escuda con coral y contraataca.",
+   artPrompt:"Pokemon TCG card art: cute crab-like creature with coral shell on its back, pastel pink and orange, colorful reef background, underwater scene. Vibrant digital painting, no text."},
+  {id:19,name:"Aquito",type:"water",rarity:"common",hp:40,atk:30,def:22,attack:"Danza Acuática",atkPow:30,atkDesc:"Gira creando un remolino que daña al rival.",
+   artPrompt:"Pokemon TCG card art: small dolphin-like monster with glowing blue patterns, jumping above ocean waves, sparkling water spray, sunrise ocean background. Cheerful digital painting, no text."},
+  {id:20,name:"Maretón",type:"water",rarity:"rare",hp:70,atk:52,def:40,attack:"Ola Tsunami",atkPow:52,atkDesc:"Genera una ola gigante que arrasa con el rival.",
+   artPrompt:"Pokemon TCG card art: powerful sea lion monster with dark blue fur and water armor plating, rearing up on a rocky shore as a massive wave crashes behind it. Dramatic digital painting, no text."},
+  {id:21,name:"Torrentide",type:"water",rarity:"rare",hp:75,atk:55,def:38,attack:"Corriente Submarina",atkPow:55,atkDesc:"Arrastra al rival con una corriente de profundidad.",
+   artPrompt:"Pokemon TCG card art: large electric eel-like monster, glowing blue stripes, spiraling through deep ocean trench, bioluminescent creatures in background. Dark atmospheric digital painting, no text."},
+  {id:22,name:"Glaciobek",type:"water",rarity:"rare",hp:68,atk:58,def:42,attack:"Aliento Ártico",atkPow:58,atkDesc:"Congela al rival con un aliento helado.",
+   artPrompt:"Pokemon TCG card art: stocky penguin monster with ice crystal wings, breathing a blizzard attack, Antarctic glacier background, aurora borealis sky. Epic digital painting, no text."},
+  {id:23,name:"Cefalomor",type:"water",rarity:"rare",hp:72,atk:60,def:35,attack:"Tinta Paralizante",atkPow:60,atkDesc:"Inyecta tinta que paraliza al rival.",
+   artPrompt:"Pokemon TCG card art: giant cephalopod monster with rainbow iridescent tentacles, emerging from a whirlpool, dark deep ocean environment, bioluminescent glow. Vibrant digital painting, no text."},
+  {id:24,name:"Tempestua",type:"water",rarity:"epic",hp:108,atk:82,def:52,attack:"Furia del Abismo",atkPow:82,atkDesc:"Invoca una tormenta de mar que daña a todos los rivales.",
+   artPrompt:"Pokemon TCG card art: sea serpent monster with hurricane wings made of water, summoning a massive ocean storm, full art lightning and waves, dramatic composition. Epic digital painting, no text."},
+  {id:25,name:"Leviathas",type:"water",rarity:"epic",hp:115,atk:88,def:48,attack:"Abismo Infinito",atkPow:88,atkDesc:"Arrastra al rival hacia las profundidades sin retorno.",
+   artPrompt:"Pokemon TCG card art: colossal deep-sea leviathan, ancient creature with barnacle armor and glowing abyssal eyes, rising from ocean trench, full art composition. Dark majestic digital painting, no text."},
+  {id:26,name:"Poseidrak",type:"water",rarity:"legendary",hp:155,atk:112,def:72,attack:"Diluvio Eterno",atkPow:112,atkDesc:"Inunda el campo de batalla. Todos los rivales sufren daño máximo.",
+   artPrompt:"Pokemon TCG card art: divine sea dragon wielding a trident of crystallized water, riding a colossal wave that covers the sky, underwater city visible below, legendary full art card. God-tier digital painting, no text."},
+  {id:27,name:"Glacivern",type:"water",rarity:"legendary",hp:148,atk:108,def:78,attack:"Cero Absoluto",atkPow:108,atkDesc:"Congela el tiempo mismo. El rival pierde su próximo turno.",
+   artPrompt:"Pokemon TCG card art: ice dragon deity suspended in a frozen moment in time, world around it crystallized in ice, cosmic aurora background, full art legendary composition. Ultra majestic digital painting, no text."},
+  {id:28,name:"Shelcoral",type:"water",rarity:"common",hp:42,atk:20,def:35,attack:"Concha Barrera",atkPow:20,atkDesc:"Usa su concha para bloquear y contraatacar.",
+   artPrompt:"Pokemon TCG card art: adorable turtle-like monster with a coral and pearl shell, glowing green eyes, resting on a tropical reef, crystal blue water around it. Cute digital painting, no text."},
+
+  // ===== PLANTA =====
+  {id:29,name:"Brotica",type:"plant",rarity:"common",hp:42,atk:22,def:30,attack:"Látigo Raíz",atkPow:22,atkDesc:"Azota al rival con una raíz flexible.",
+   artPrompt:"Pokemon TCG card art: tiny sprout monster with big leaf ears and vine arms, smiling in a sunlit forest clearing, colorful wildflowers around it. Cute digital painting, no text."},
+  {id:30,name:"Musguín",type:"plant",rarity:"common",hp:40,atk:20,def:32,attack:"Abrazo de Musgo",atkPow:20,atkDesc:"Envuelve al rival con musgo paralizante.",
+   artPrompt:"Pokemon TCG card art: round mossy creature with glowing green eyes, fur made of living moss and tiny flowers, sitting in a damp forest. Cozy green digital painting, no text."},
+  {id:31,name:"Florverde",type:"plant",rarity:"common",hp:38,atk:26,def:26,attack:"Pétalo Cortante",atkPow:26,atkDesc:"Lanza pétalos afilados como cuchillas.",
+   artPrompt:"Pokemon TCG card art: fairy-like plant monster with petal wings and flower head, launching sharp petals in battle, magical meadow background. Whimsical digital painting, no text."},
+  {id:32,name:"Espinín",type:"plant",rarity:"common",hp:44,atk:28,def:24,attack:"Zarpazo Espinoso",atkPow:28,atkDesc:"Araña con espinas envenenadas.",
+   artPrompt:"Pokemon TCG card art: hedgehog-like monster with thorny spines and leafy body, curled in defensive position in a thicket, glowing amber eyes. Cute digital painting, no text."},
+  {id:33,name:"Bamburok",type:"plant",rarity:"rare",hp:75,atk:50,def:45,attack:"Empalada de Bambú",atkPow:50,atkDesc:"Hace brotar lanzas de bambú bajo el rival.",
+   artPrompt:"Pokemon TCG card art: giant panda-bear monster with bamboo armor and vine whips, standing in a bamboo grove, forest fog background. Powerful digital painting, no text."},
+  {id:34,name:"Fernthorn",type:"plant",rarity:"rare",hp:70,atk:55,def:42,attack:"Espesura Mortal",atkPow:55,atkDesc:"Crea una espesura de zarzas que atrapa al rival.",
+   artPrompt:"Pokemon TCG card art: dragon-like plant monster covered in thorny vines and ferns, rising from a dark enchanted forest, bioluminescent plant glow. Epic digital painting, no text."},
+  {id:35,name:"Heliodrak",type:"plant",rarity:"rare",hp:68,atk:58,def:38,attack:"Rayo Fotosintético",atkPow:58,atkDesc:"Concentra energía solar en un rayo de luz devastador.",
+   artPrompt:"Pokemon TCG card art: hawk-like plant monster with wings of giant sunflower petals, diving from a sunlit sky, golden light beams radiating from its body. Vibrant digital painting, no text."},
+  {id:36,name:"Sylvanoth",type:"plant",rarity:"epic",hp:106,atk:80,def:55,attack:"El Bosque Eterno",atkPow:80,atkDesc:"Invoca el espíritu del bosque. Todos los rivales quedan enraizados.",
+   artPrompt:"Pokemon TCG card art: ancient forest spirit deer with antlers of living trees and glowing runes on fur, standing in a sacred grove, full art mystical composition. Majestic digital painting, no text."},
+  {id:37,name:"Verdantia",type:"plant",rarity:"epic",hp:112,atk:84,def:50,attack:"Florecimiento Explosivo",atkPow:84,atkDesc:"Hace explotar un jardín de flores tóxicas sobre el campo.",
+   artPrompt:"Pokemon TCG card art: feminine plant elemental with flower crown and vine dress, summoning a tidal wave of explosive blooms, colorful chaos, full art composition. Beautiful epic digital painting, no text."},
+  {id:38,name:"Arbórex",type:"plant",rarity:"legendary",hp:152,atk:106,def:80,attack:"Raíz del Mundo",atkPow:106,atkDesc:"Conecta con la raíz primordial. Daño devastador e imposible de evitar.",
+   artPrompt:"Pokemon TCG card art: colossal ancient tree giant, body made of roots and bark, eyes like glowing emeralds, roots shattering the earth below, full art legendary card. God-tier digital painting, no text."},
+  {id:39,name:"Gaiaverde",type:"plant",rarity:"legendary",hp:158,atk:100,def:88,attack:"Renacimiento Total",atkPow:100,atkDesc:"Cura completamente al equipo y daña masivamente al rival.",
+   artPrompt:"Pokemon TCG card art: nature goddess serpent with body of intertwined vines and blooming flowers, floating above a lush paradise island, rainbow aura, full art legendary composition. Divine digital painting, no text."},
+  {id:40,name:"Cacthorn",type:"plant",rarity:"rare",hp:72,atk:48,def:48,attack:"Aguijón del Desierto",atkPow:48,atkDesc:"Lanza espinas de cactus envenenadas.",
+   artPrompt:"Pokemon TCG card art: porcupine-like monster covered in glowing cactus spines, standing in a dramatic red desert at sunset, dramatic shadow. Vibrant digital painting, no text."},
+
+  // ===== ELÉCTRICO =====
+  {id:41,name:"Chispín",type:"electric",rarity:"common",hp:36,atk:32,def:18,attack:"Descarga",atkPow:32,atkDesc:"Lanza una pequeña descarga eléctrica.",
+   artPrompt:"Pokemon TCG card art: tiny electric mouse monster with large ears and lightning bolt tail, sparks flying from cheeks, cheerful pose in a stormy field. Cute digital painting, no text."},
+  {id:42,name:"Zappito",type:"electric",rarity:"common",hp:38,atk:30,def:20,attack:"Picadura Eléctrica",atkPow:30,atkDesc:"Muerde transmitiendo electricidad al rival.",
+   artPrompt:"Pokemon TCG card art: small yellow lizard monster with electric stripe patterns and glowing eyes, clinging to a telegraph pole, city skyline background, sparks everywhere. Cute digital painting, no text."},
+  {id:43,name:"Voltín",type:"electric",rarity:"common",hp:34,atk:34,def:16,attack:"Rayo Veloz",atkPow:34,atkDesc:"Un rayo instantáneo que siempre impacta.",
+   artPrompt:"Pokemon TCG card art: chick-like monster made of pure electricity, blurry from speed, lightning trail behind it, electric blue sky. Dynamic cute digital painting, no text."},
+  {id:44,name:"Amperino",type:"electric",rarity:"common",hp:40,atk:28,def:24,attack:"Parálisis Estática",atkPow:28,atkDesc:"Genera estática que puede paralizar al rival.",
+   artPrompt:"Pokemon TCG card art: round fluffy hamster monster with electric fur standing on end, surrounded by electric sparks, inside a glowing power plant. Cute digital painting, no text."},
+  {id:45,name:"Fulguralce",type:"electric",rarity:"rare",hp:68,atk:60,def:32,attack:"Trueno Encadenado",atkPow:60,atkDesc:"Un trueno que rebota entre múltiples rivales.",
+   artPrompt:"Pokemon TCG card art: elegant horse monster with lightning bolt mane and crackling electric hooves, galloping across storm clouds, lightning strike in background. Dramatic digital painting, no text."},
+  {id:46,name:"Voltraptor",type:"electric",rarity:"rare",hp:72,atk:58,def:36,attack:"Carga Electromagnética",atkPow:58,atkDesc:"Se lanza como una bala electromagnética.",
+   artPrompt:"Pokemon TCG card art: raptor dinosaur monster with electric fin along its back, running at incredible speed with lightning trail, electric storm background. Intense action digital painting, no text."},
+  {id:47,name:"Megastorm",type:"electric",rarity:"epic",hp:102,atk:86,def:44,attack:"Tormenta Eléctrica",atkPow:86,atkDesc:"Invoca una tormenta eléctrica que sacude todo el campo.",
+   artPrompt:"Pokemon TCG card art: giant storm hawk monster with wingspan made of thunderclouds, summoning an apocalyptic electrical storm, full art composition, lightning everywhere. Epic digital painting, no text."},
+  {id:48,name:"Voltherion",type:"electric",rarity:"epic",hp:110,atk:82,def:50,attack:"Sobrecarga Nuclear",atkPow:82,atkDesc:"Libera toda su energía en una explosión electromagnética masiva.",
+   artPrompt:"Pokemon TCG card art: mechanical-organic fusion monster with tesla coil horns, overloading with electricity, city lights going out behind it, full art dramatic composition. Cyberpunk digital painting, no text."},
+  {id:49,name:"Thunderex",type:"electric",rarity:"legendary",hp:150,atk:115,def:68,attack:"Apocalipsis del Rayo",atkPow:115,atkDesc:"El cielo entero descarga sobre el rival. Daño masivo garantizado.",
+   artPrompt:"Pokemon TCG card art: legendary electric dragon with body of pure lightning and thunder, wings spanning the entire sky, calling down all lightning on earth, full art legendary card. God-tier digital painting, no text."},
+  {id:50,name:"Zeuskalon",type:"electric",rarity:"legendary",hp:162,atk:108,def:76,attack:"Tronada Divina",atkPow:108,atkDesc:"Un trueno de poder divino que nunca puede ser bloqueado.",
+   artPrompt:"Pokemon TCG card art: electric god in the form of a colossal ox-like deity, horns crackling with divine lightning, standing above storm clouds, the whole world illuminated by its power, full art legendary composition. Divine epic digital painting, no text."},
+];
+
+const PACK_TYPES = [
+  {id:'fire',name:'Sobre Infernal',emoji:'🔥',cost:30,cards:3,desc:'Llamas, lava y destrucción · Arte IA',typeFilter:'fire',mixed:false},
+  {id:'water',name:'Sobre Oceánico',emoji:'💧',cost:30,cards:3,desc:'Profundidades, hielo y torrentes · Arte IA',typeFilter:'water',mixed:false},
+  {id:'mega',name:'Sobre Legendario',emoji:'🌈',cost:50,cards:3,desc:'¡Cualquier tipo! Mayor chance épico/legend.',typeFilter:null,mixed:true},
+];
+
+// ===== STATE =====
+let coins = 150, collection = {}, artCache = {}, pendingCards = [], currentFilter = 'all';
+let aiSelectedType = 'fire', aiSelectedRarity = 'common', generatedAICard = null;
+
+function saveGame(){
+  try{ localStorage.setItem(SAVE_KEY, JSON.stringify({coins,collection,artCache})); }
+  catch(e){ console.warn('localStorage lleno'); }
+}
+function loadGame(){
+  try{
+    const d = JSON.parse(localStorage.getItem(SAVE_KEY));
+    if(d){ coins=d.coins??150; collection=d.collection??{}; artCache=d.artCache??{}; }
+  }catch(e){}
+}
+loadGame();
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('coinCount').textContent=coins;
+  renderPacksGrid();
+});
+
+// ===== PACKS GRID =====
+function renderPacksGrid(){
+  const grid = document.getElementById('packsGrid');
+  const typeClass = {fire:'fire',water:'water',mega:'electric'};
+  grid.innerHTML = PACK_TYPES.map(p=>`
+    <div class="pack-card ${typeClass[p.id]||'plant'}">
+      <div class="pack-emoji-big">${p.emoji}</div>
+      <div class="pack-info">
+        <div class="pack-name">${p.name}</div>
+        <div class="pack-cost-row">
+          <span class="pack-cost">🪙 ${p.cost}</span>
+          <span class="pack-cards-count">${p.cards} cartas</span>
+        </div>
+        <div class="pack-desc">${p.desc}</div>
+      </div>
+      <button class="pack-btn" id="packBtn-${p.id}" onclick="openPack('${p.id}')">¡Abrir!</button>
+    </div>`).join('');
+}
+
+// ===== DRAW CARD =====
+function drawCard(packDef){
+  const r = Math.random();
+  let rarity;
+  if(packDef.mixed){
+    rarity = r<0.05?'legendary':r<0.18?'epic':r<0.42?'rare':'common';
+  } else {
+    rarity = r<0.02?'legendary':r<0.10?'epic':r<0.30?'rare':'common';
+  }
+  let pool = CARDS.filter(c=>c.rarity===rarity && (packDef.mixed || c.type===packDef.typeFilter));
+  if(!pool.length) pool = CARDS.filter(c=>c.rarity==='common' && (packDef.mixed || c.type===packDef.typeFilter));
+  if(!pool.length) pool = CARDS.filter(c=>c.rarity==='common');
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+
+function wait(ms){ return new Promise(r=>setTimeout(r,ms)); }
+
+// ===== OPEN PACK =====
+async function openPack(packId){
+  const pack = PACK_TYPES.find(p=>p.id===packId);
+  if(!pack) return;
+  if(coins < pack.cost){
+    document.getElementById('statusMsg').textContent='⚠️ No tenés suficientes monedas';
+    return;
+  }
+  coins -= pack.cost;
+  document.getElementById('coinCount').textContent = coins;
+  PACK_TYPES.forEach(p=>{ const b=document.getElementById('packBtn-'+p.id); if(b) b.disabled=true; });
+  saveGame();
+
+  // Draw 3 cards (unique)
+  pendingCards = [];
+  let tries = 0;
+  while(pendingCards.length < pack.cards && tries < 30){
+    const c = drawCard(pack);
+    if(!pendingCards.find(x=>x.id===c.id)) pendingCards.push(c);
+    tries++;
+  }
+  // fill if needed
+  while(pendingCards.length < pack.cards){
+    const fallback = CARDS.find(c=>!pendingCards.find(x=>x.id===c.id)) || CARDS[0];
+    pendingCards.push(fallback);
+  }
+  pendingCards.sort((a,b)=>RARITY_ORDER[a.rarity]-RARITY_ORDER[b.rarity]);
+
+  // Setup overlay
+  const overlay = document.getElementById('packOpening');
+  document.getElementById('openingEmoji').textContent = pack.emoji;
+  const dots = document.getElementById('progressDots');
+  dots.innerHTML = pendingCards.map((_,i)=>`<div class="dot" id="dot${i}"></div>`).join('');
+  overlay.classList.add('active');
+
+  // Generate art for each card sequentially
+  for(let i=0;i<pendingCards.length;i++){
+    const card = pendingCards[i];
+    document.getElementById(`dot${i}`).className='dot loading';
+    const cached = !!artCache[card.id];
+    document.getElementById('openingText').textContent = `Carta ${i+1}: ${card.name}`;
+    document.getElementById('openingSub').textContent = cached
+      ? '¡Ilustración en caché! ⚡'
+      : 'Generando arte con IA... 🎨';
+    if(!cached){
+      const art = await generateArt(card);
+      if(!art){
+        document.getElementById('openingSub').textContent = 'No se pudo generar imagen';
+        await wait(1000);
+      }
+    }
+    document.getElementById(`dot${i}`).className='dot done';
+    document.getElementById('openingText').textContent = `✅ ${card.name} lista!`;
+    await wait(500);
+  }
+
+  document.getElementById('openingText').textContent='🎉 ¡Todas listas!';
+  document.getElementById('openingSub').textContent='Revelando cartas...';
+  await wait(600);
+  overlay.classList.remove('active');
+  showReveal();
+}
+
+// ===== ART GENERATION (Pollinations) =====
+async function fetchWithTimeout(url, ms=50000){
+  const ctrl = new AbortController();
+  const t = setTimeout(()=>ctrl.abort(), ms);
+  try{ const r=await fetch(url,{signal:ctrl.signal}); clearTimeout(t); return r; }
+  catch(e){ clearTimeout(t); throw e; }
+}
+
+async function generateArt(card){
+  if(artCache[card.id]) return artCache[card.id];
+  const prompt = encodeURIComponent(card.artPrompt);
+  const isFullArt = card.rarity==='epic'||card.rarity==='legendary';
+  const w=280, h=isFullArt?380:160;
+  const seed = card.id * 137;
+  const url = `https://image.pollinations.ai/prompt/${prompt}?width=${w}&height=${h}&seed=${seed}&nologo=true&model=flux`;
+  for(let i=1;i<=3;i++){
+    try{
+      if(i>1) document.getElementById('openingSub').textContent=`Reintentando (${i}/3)... 🔄`;
+      const res = await fetchWithTimeout(url,50000);
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      const blob = await res.blob();
+      const dataUrl = await new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(blob); });
+      artCache[card.id]=dataUrl; saveGame(); return dataUrl;
+    }catch(e){ console.warn(`Intento ${i}:`,e.message); if(i<3) await wait(2000); }
+  }
+  return null;
+}
+
+// ===== REVEAL =====
+function showReveal(){
+  const container = document.getElementById('revealedCards');
+  container.innerHTML='';
+  pendingCards.forEach((card,i)=>{
+    const isNew = !collection[card.id];
+    setTimeout(()=>{ container.innerHTML += renderCard(card,isNew,i); },i*350);
+  });
+  document.getElementById('cardsReveal').classList.add('active');
+}
+
+function collectCards(){
+  pendingCards.forEach(c=>{ collection[c.id]=(collection[c.id]||0)+1; });
+  document.getElementById('cardsReveal').classList.remove('active');
+  pendingCards=[];
+  coins+=10;
+  document.getElementById('coinCount').textContent=coins;
+  PACK_TYPES.forEach(p=>{ const b=document.getElementById('packBtn-'+p.id); if(b) b.disabled=false; });
+  saveGame();
+  renderCollection();
+}
+
+// ===== RENDER CARD =====
+function renderCard(card, isNew=false, delayIdx=0){
+  const isFullArt = card.rarity==='epic'||card.rarity==='legendary';
+  const hpColor = card.rarity==='legendary'?'#f7c948':card.rarity==='epic'?'#c97aff':card.rarity==='rare'?'#3ab4f2':'#aaa';
+  const tClass = TYPE_CLASS[card.type]||'t-fire';
+  const bClass = TYPE_BORDER[card.type]||'b-fire';
+  const tEmoji = TYPE_EMOJI[card.type]||'🔥';
+  const tName = {fire:'Fuego',water:'Agua',plant:'Planta',electric:'Eléctrico'}[card.type]||'Fuego';
+
+  let artContent;
+  if(artCache[card.id]){
+    artContent = `<img src="${artCache[card.id]}" alt="${card.name}">`;
+  } else {
+    artContent = `<div class="art-loading"><div class="art-spinner"></div><div>Generando con IA...</div></div>`;
+  }
+
+  const artBox = `<div class="card-art-box" id="artbox-${card.id}">${artContent}</div>`;
+  const header = `<div class="card-header">
+    <div class="card-name">${card.name}</div>
+    <div class="card-hp" style="color:${hpColor}"><span style="font-size:1.1rem">${card.hp}</span> HP</div>
+  </div>`;
+  const typeRow = `<div class="card-type-row">
+    <span class="type-pill ${tClass}">${tEmoji} ${tName}</span>
+    <span class="rarity-pip pip-${card.rarity}">${RARITY_PIP[card.rarity]}</span>
+  </div>`;
+  const stats = `<div class="card-stats">
+    <div class="stat-box"><div class="stat-val">${card.atk}</div><div class="stat-lbl">ATK</div></div>
+    <div class="stat-box"><div class="stat-val">${card.def}</div><div class="stat-lbl">DEF</div></div>
+    <div class="stat-box"><div class="stat-val">${card.hp}</div><div class="stat-lbl">HP</div></div>
+  </div>`;
+  const attack = `<div class="card-attack ${bClass}">
+    <div class="atk-name"><span style="float:right;font-family:'Fredoka One',cursive;font-size:.95rem;color:${hpColor}">${card.atkPow}</span>⚔️ ${card.attack}</div>
+    <div class="atk-desc">${card.atkDesc}</div>
+  </div>`;
+
+  const inner = isFullArt
+    ? `${artBox}<div class="card-inner-wrap">${header}${typeRow}${stats}${attack}</div>`
+    : `<div class="card-inner-wrap">${header}${artBox}${typeRow}${stats}${attack}</div>`;
+
+  const newBadge = isNew ? '<div class="new-badge">¡NUEVA!</div>' : '';
+  const delay = delayIdx*0.2;
+  return `<div class="tcg-card ${card.rarity}" style="animation-delay:${delay}s;position:relative;" data-card-id="${card.id}" onclick="showCard(${card.id})">${newBadge}${inner}</div>`;
+}
+
+// ===== COLLECTION =====
+function setFilter(type, btn){
+  currentFilter = type;
+  document.querySelectorAll('.ftab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderCollection();
+}
+
+function showScreen(name, btn){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('screen-'+name).classList.add('active');
+  btn.classList.add('active');
+  if(name==='collection') renderCollection();
+}
+
+function renderCollection(){
+  const grid = document.getElementById('collectionGrid');
+  let owned = Object.keys(collection)
+    .map(id=>{
+      const numId = parseInt(id);
+      const card = CARDS.find(c=>c.id===numId);
+      return card ? {card, count:collection[id]} : null;
+    })
+    .filter(Boolean)
+    .sort((a,b)=>RARITY_ORDER[a.card.rarity]-RARITY_ORDER[b.card.rarity]);
+
+  if(currentFilter!=='all') owned = owned.filter(x=>x.card.type===currentFilter);
+
+  const totalCards = owned.reduce((s,x)=>s+x.count,0);
+  const unique = Object.keys(collection).filter(id=>collection[id]>0).length;
+  document.getElementById('totalOwned').textContent = totalCards;
+  document.getElementById('uniqueOwned').textContent = unique;
+  document.getElementById('progressPct').textContent = Math.round(unique/50*100)+'%';
+
+  if(!owned.length){
+    grid.innerHTML=`<div class="empty-col"><div class="icon">${currentFilter==='all'?'📦':'🔍'}</div><div>${currentFilter==='all'?'¡Todavía no tenés cartas!':'Sin cartas de este tipo aún'}</div></div>`;
+    return;
+  }
+
+  const tEmoji = TYPE_EMOJI;
+  const tName = {fire:'Fuego',water:'Agua',plant:'Planta',electric:'Eléctrico'};
+  grid.innerHTML = owned.map(({card,count})=>{
+    const art = artCache[card.id]
+      ? `<img src="${artCache[card.id]}" alt="${card.name}" style="width:100%;height:100%;object-fit:cover;">`
+      : `<div class="mini-art-placeholder">${tEmoji[card.type]||'🔥'}</div>`;
+    return `<div class="mini-tcg ${card.rarity}" onclick="showCard(${card.id})">
+      ${count>1?`<div class="mini-count-badge">x${count}</div>`:''}
+      <div class="mini-art">${art}</div>
+      <div class="mini-footer">
+        <div class="mini-mname">${card.name}</div>
+        <div class="mini-type-row">
+          <span class="type-pill ${TYPE_CLASS[card.type]}" style="font-size:.54rem;padding:1px 5px">${tEmoji[card.type]} ${tName[card.type]}</span>
+          <span class="pip-${card.rarity}" style="font-size:.62rem">${RARITY_PIP[card.rarity]}</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function showCard(id){
+  const numId = parseInt(id);
+  const card = CARDS.find(c=>c.id===numId);
+  if(!card) return;
+  const wrap = document.getElementById('modalCardWrap');
+  wrap.innerHTML = renderCard(card,false,0);
+  wrap.innerHTML += `<div style="text-align:center;color:var(--muted);font-size:.8rem;margin-top:8px">Copias: ${collection[id]||0} · ID #${card.id}</div>`;
+  document.getElementById('cardModal').classList.add('active');
+}
+function closeModal(){ document.getElementById('cardModal').classList.remove('active'); }
+
+// ===== GENERADOR IA (Claude API) =====
+function selectType(btn){
+  aiSelectedType = btn.dataset.type;
+  document.querySelectorAll('.ai-type-btn').forEach(b=>{ b.className='ai-type-btn'; });
+  btn.className=`ai-type-btn sel-${aiSelectedType}`;
+}
+function selectRarity(btn){
+  aiSelectedRarity = btn.dataset.rarity;
+  document.querySelectorAll('.ai-rarity-btn').forEach(b=>{ b.className='ai-rarity-btn'; });
+  btn.className=`ai-rarity-btn sel r-${aiSelectedRarity}`;
+}
+
+async function generateAICard(){
+  const desc = document.getElementById('aiDesc').value.trim();
+  if(!desc){ document.getElementById('aiResultArea').innerHTML='<div class="ai-status">⚠️ Escribí una descripción primero</div>'; return; }
+
+  const btn = document.getElementById('btnGenerate');
+  btn.disabled = true;
+  const area = document.getElementById('aiResultArea');
+  area.innerHTML='<div class="ai-status working">🤖 Claude está inventando tu monstruo...<br>Esto puede tardar unos segundos ✨</div>';
+
+  const typeNames = {fire:'Fuego 🔥',water:'Agua 💧',plant:'Planta 🌿',electric:'Eléctrico ⚡'};
+  const rarityNames = {common:'Común',rare:'Rara',epic:'Épica',legendary:'Legendaria'};
+
+  const prompt = `Eres un diseñador de juego de cartas de monstruos estilo Pokémon TCG. 
+El usuario describe su monstruo: "${desc}"
+Tipo: ${typeNames[aiSelectedType]}
+Rareza: ${rarityNames[aiSelectedRarity]}
+
+Crea una carta de monstruo ORIGINAL y creativa. Responde SOLO con un JSON válido, sin markdown, sin explicaciones, sin backticks:
+
+{
+  "name": "nombre creativo en español (1-2 palabras)",
+  "hp": número entre 35 y 160 según rareza,
+  "atk": número entre 20 y 115,
+  "def": número entre 15 y 88,
+  "attack": "nombre del ataque especial en español",
+  "atkPow": número (potencia del ataque, similar a atk),
+  "atkDesc": "descripción corta del ataque (máximo 60 caracteres)",
+  "artPrompt": "Pokemon TCG card art: [descripción detallada en inglés del monstruo, escenario y estilo. Siempre terminar con: Vibrant digital painting, no text.]"
+}
+
+Para rareza common: hp 35-50, atk 20-35
+Para rareza rare: hp 65-80, atk 48-62
+Para rareza epic: hp 100-120, atk 78-90
+Para rareza legendary: hp 145-165, atk 100-115`;
+
+  try{
+    const res = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        messages:[{role:'user',content:prompt}]
+      })
+    });
+    if(!res.ok) throw new Error('API error '+res.status);
+    const data = await res.json();
+    const text = data.content.map(b=>b.text||'').join('');
+    const clean = text.replace(/```json|```/g,'').trim();
+    const cardData = JSON.parse(clean);
+
+    // Build temp card object
+    const tempId = 9000 + Date.now()%1000;
+    generatedAICard = {
+      id: tempId,
+      name: cardData.name || 'Monstruo IA',
+      type: aiSelectedType,
+      rarity: aiSelectedRarity,
+      hp: cardData.hp || 50,
+      atk: cardData.atk || 30,
+      def: cardData.def || 25,
+      attack: cardData.attack || 'Ataque Especial',
+      atkPow: cardData.atkPow || cardData.atk || 30,
+      atkDesc: cardData.atkDesc || 'Un ataque devastador.',
+      artPrompt: cardData.artPrompt || `Pokemon TCG card art: ${desc}, ${aiSelectedType} type monster. Vibrant digital painting, no text.`
+    };
+
+    area.innerHTML='<div class="ai-status working">🎨 Generando ilustración con IA...</div>';
+
+    // Generate art
+    const artUrl = await generateArtForAI(generatedAICard);
+    if(artUrl) artCache[tempId] = artUrl;
+
+    area.innerHTML = renderCard(generatedAICard, true, 0);
+    area.innerHTML += `<button class="btn-add-to-col" onclick="addAICardToCollection()">➕ Añadir a mi Colección</button>`;
+
+  }catch(e){
+    console.error(e);
+    area.innerHTML=`<div class="ai-status">❌ Error generando la carta. Intentá de nuevo.<br><small>${e.message}</small></div>`;
+  }
+  btn.disabled=false;
+}
+
+async function generateArtForAI(card){
+  const prompt = encodeURIComponent(card.artPrompt);
+  const isFullArt = card.rarity==='epic'||card.rarity==='legendary';
+  const w=280, h=isFullArt?380:160;
+  const seed = Math.floor(Math.random()*9999);
+  const url = `https://image.pollinations.ai/prompt/${prompt}?width=${w}&height=${h}&seed=${seed}&nologo=true&model=flux`;
+  try{
+    const res = await fetchWithTimeout(url, 55000);
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const blob = await res.blob();
+    return await new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(blob); });
+  }catch(e){ console.warn('Art gen failed:',e.message); return null; }
+}
+
+function addAICardToCollection(){
+  if(!generatedAICard) return;
+  // Add to CARDS array and collection
+  CARDS.push(generatedAICard);
+  collection[generatedAICard.id] = (collection[generatedAICard.id]||0)+1;
+  coins += 5;
+  document.getElementById('coinCount').textContent = coins;
+  saveGame();
+  renderCollection();
+  document.getElementById('aiResultArea').innerHTML='<div class="ai-status">✅ ¡Carta añadida a tu colección! 🎉</div>';
+  generatedAICard = null;
+}
+</script>
+</body>
+</html>
